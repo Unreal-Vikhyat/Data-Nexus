@@ -22,6 +22,9 @@ const envSchema = z.object({
   BREVO_API_KEY: z.string().optional(),
   BREVO_SENDER_EMAIL: z.string().email().optional(),
   BREVO_SENDER_NAME: z.string().default("Data-Nexus"),
+  RAZORPAY_KEY_ID: z.string().min(1).default("rzp_test_TzHjzbaQmdG2z6"),
+  RAZORPAY_KEY_SECRET: z.string().min(1).default("gGNlAjILyjVT93FEXfH5GKBl"),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 });
 
 const result = envSchema.safeParse(process.env);
