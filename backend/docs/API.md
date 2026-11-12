@@ -435,6 +435,54 @@ Response `200`:
 }
 ```
 
+## Activity & Audit Logs
+
+### `GET /workspaces/:workspaceId/activity`
+
+Permission: any workspace member (`viewer`, `editor`, `admin`, `owner`).
+
+Query params:
+- `limit` (optional integer, 1–200, default `50`)
+- `offset` (optional integer, default `0`)
+- `action` (optional string, e.g. `report.export`, `wallet.debit`, `wallet.credit`)
+- `entityType` (optional string, e.g. `report`, `wallet`)
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Workspace activity logs",
+  "data": {
+    "items": [
+      {
+        "id": "e4f5a6b7-8901-2345-6789-0123456789ab",
+        "organizationId": "3493e828-5586-45ef-89a1-02e07973d4ee",
+        "userId": "0ae5b005-b3e7-4b4c-83af-968fc230ed51",
+        "userName": "Mahi Sharma",
+        "userEmail": "user@example.com",
+        "action": "report.export",
+        "entityType": "report",
+        "entityId": "custom",
+        "details": {
+          "format": "pdf",
+          "title": "Data Nexus Executive Report",
+          "recordCount": 150,
+          "creditsDeducted": 5,
+          "remainingCredits": 45
+        },
+        "ipAddress": "127.0.0.1",
+        "createdAt": "2026-11-12T16:20:00.000Z"
+      }
+    ],
+    "total": 1,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": false
+  }
+}
+```
+
 ## Common failures
 
 - `400 VALIDATION_ERROR` — invalid input; `errors` maps fields to validation messages.

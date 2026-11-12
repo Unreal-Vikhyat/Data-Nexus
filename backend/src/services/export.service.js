@@ -14,6 +14,7 @@ import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
 import { withTenantTransaction } from "../database/transaction.js";
 import { assertSufficientCredits, debitWallet } from "./wallet.service.js";
+import { logActivity } from "./activity.service.js";
 import { CREDIT_COSTS } from "../config/credits.config.js";
 
 function httpError(status, code, message) {
@@ -416,6 +417,22 @@ export async function exportReportData(userId, organizationId, {
       amount: creditCost,
       referenceType: "report_export",
       description: `Exported ${format.toUpperCase()} report: ${title}`,
+      client,
+    });
+
+    await logActivity({
+      organizationId,
+      userId,
+      action: "report.export",
+      entityType: "report",
+      entityId: datasetId ? String(datasetId) : "custom",
+      details: {
+        format,
+        title,
+        recordCount: rows.length,
+        creditsDeducted: creditCost,
+        remainingCredits: debitResult.balanceAfter,
+      },
       client,
     });
 

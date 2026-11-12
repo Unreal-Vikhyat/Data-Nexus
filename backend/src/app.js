@@ -11,6 +11,7 @@ import healthRoutes from "./routes/health.routes.js";
 import workspaceRoutes from "./routes/workspace.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import billingRoutes from "./routes/billing.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
 import { errorHandler, notFound } from "./middleware/error-handler.js";
 
 export function createApp() {
@@ -59,6 +60,7 @@ export function createApp() {
   app.use("/api/v1", workspaceRoutes);
   app.use("/api/v1", reportRoutes);
   app.use("/api/v1", billingRoutes);
+  app.use("/api/v1", activityRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;

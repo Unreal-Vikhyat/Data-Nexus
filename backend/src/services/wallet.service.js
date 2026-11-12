@@ -8,6 +8,7 @@
 
 import { withTenantTransaction } from "../database/transaction.js";
 import { newId } from "../utils/crypto.js";
+import { logActivity } from "./activity.service.js";
 import { WELCOME_CREDIT_BONUS } from "../config/credits.config.js";
 
 function httpError(status, code, message) {
@@ -154,6 +155,21 @@ export async function creditWallet(userId, organizationId, {
       ],
     );
 
+    await logActivity({
+      organizationId,
+      userId,
+      action: "wallet.credit",
+      entityType: "wallet",
+      entityId: txId,
+      details: {
+        amount: parsedAmount,
+        balanceAfter,
+        referenceType,
+        description,
+      },
+      client,
+    });
+
     return {
       success: true,
       transactionId: txId,
@@ -228,6 +244,21 @@ export async function debitWallet(userId, organizationId, {
         JSON.stringify(metadata),
       ],
     );
+
+    await logActivity({
+      organizationId,
+      userId,
+      action: "wallet.debit",
+      entityType: "wallet",
+      entityId: txId,
+      details: {
+        amount: parsedAmount,
+        balanceAfter,
+        referenceType,
+        description,
+      },
+      client,
+    });
 
     return {
       success: true,
