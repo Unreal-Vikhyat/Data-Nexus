@@ -279,6 +279,66 @@ Response `200`:
 { "success": true, "message": "Member removed", "data": { "removed": true } }
 ```
 
+## Reports and exports
+
+Base path: `/api/v1`. Supports exporting authorized analytics results, dataset summaries, and custom query tables to PDF, Excel (.xlsx), and CSV.
+
+### Supported formats
+- `pdf`: Branded executive report with Data Nexus banner, KPI summary cards, and paginated data tables (`application/pdf`).
+- `xlsx`: Structured Excel workbook with styled headers, auto-width columns, and separate Overview/Data sheets (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`).
+- `csv`: High-performance CSV stream with RFC 4180 escaping and formula injection sanitization (`text/csv; charset=utf-8`).
+
+### Security: Spreadsheet formula injection protection
+Cells starting with formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) are automatically neutralized with a leading single quote (`'`) to prevent formula execution in spreadsheet software (CWE-1236).
+
+### `POST /workspaces/:workspaceId/reports/export`
+
+Permission: active member (viewer or above). Exports custom tabular data, KPI metrics, or query state.
+
+Request:
+
+```json
+{
+  "format": "pdf",
+  "title": "Q4 Executive Performance & Revenue Report",
+  "subtitle": "Comprehensive analytics summary covering regional sales and category performance.",
+  "summaryMetrics": [
+    { "label": "Total Revenue", "value": "₹ 2,45,000" },
+    { "label": "Total Orders", "value": "1,420" }
+  ],
+  "customColumns": ["Region", "Category", "Orders", "Revenue"],
+  "customRows": [
+    ["North", "Electronics", 480, "₹ 1,12,000"],
+    ["South", "Furniture", 340, "₹ 68,500"]
+  ],
+  "limit": 500
+}
+```
+
+Response `200`: Binary file download stream with headers:
+- `Content-Type: application/pdf` (or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` or `text/csv; charset=utf-8`)
+- `Content-Disposition: attachment; filename="q4_executive_performance_2026-11-12.pdf"`
+- `Content-Length: <byte_count>`
+
+### `POST /workspaces/:workspaceId/datasets/:datasetId/reports/export`
+
+Permission: active member (viewer or above). Exports data directly from an existing workspace dataset.
+
+Request:
+
+```json
+{
+  "format": "xlsx",
+  "title": "Dataset Summary Export",
+  "summaryMetrics": [
+    { "label": "Total Records", "value": 1250 }
+  ],
+  "limit": 1000
+}
+```
+
+Response `200`: Binary file download stream.
+
 ## Common failures
 
 - `400 VALIDATION_ERROR` — invalid input; `errors` maps fields to validation messages.
