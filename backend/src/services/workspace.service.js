@@ -1,7 +1,7 @@
 import { env } from "../config/env.js";
 import { withNewTenantTransaction, withTenantTransaction, withUserTransaction } from "../database/transaction.js";
 import { hashSecret, newId, newSecret } from "../utils/crypto.js";
-import { sendAccountLink } from "./email.service.js";
+import { sendWorkspaceInviteEmail } from "./email.service.js";
 
 function httpError(status, code, message) {
   return Object.assign(new Error(message), { status, code });
@@ -93,10 +93,14 @@ export async function inviteMember(userId, organizationId, { email, role }) {
     const org = await client.query("SELECT name FROM organizations WHERE id = $1", [organizationId]);
     return { email: email.toLowerCase(), role, workspaceName: org.rows[0].name };
   });
-  const url = `${env.FRONTEND_URL}/invitations/accept?token=${encodeURIComponent(token)}`;
+  const url = `${env.FRONTEND_URL}/invitations/accept?token=${encodeURIComponent(token)}&email=${encodeURIComponent(invitation.email)}`;
   let delivery;
   try {
-    delivery = await sendAccountLink({ to: invitation.email, subject: `Join ${invitation.workspaceName} on Data Nexus`, url, action: "accept the workspace invitation" });
+    delivery = await sendWorkspaceInviteEmail({
+      to: invitation.email,
+      workspaceName: invitation.workspaceName,
+      inviteUrl: url,
+    });
   } catch (error) {
     await withTenantTransaction(userId, organizationId, (client) => client.query(
       "UPDATE invitations SET revoked_at = now() WHERE token_hash = $1", [hashSecret(token)],
