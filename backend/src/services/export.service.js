@@ -13,6 +13,8 @@
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
 import { withTenantTransaction } from "../database/transaction.js";
+import { assertSufficientCredits, debitWallet } from "./wallet.service.js";
+import { CREDIT_COSTS } from "../config/credits.config.js";
 
 function httpError(status, code, message) {
   return Object.assign(new Error(message), { status, code });
@@ -362,7 +364,16 @@ export async function exportReportData(userId, organizationId, {
       throw httpError(400, "EMPTY_DATASET", "Cannot export without columns or data rows");
     }
 
-    // 3. Generate file buffer based on requested format
+    // 3. Pre-flight check: verify workspace has sufficient credits before heavy rendering
+    const creditCost = format === "pdf"
+      ? CREDIT_COSTS.REPORT_PDF
+      : format === "xlsx"
+        ? CREDIT_COSTS.REPORT_XLSX
+        : CREDIT_COSTS.REPORT_CSV;
+
+    await assertSufficientCredits(client, organizationId, creditCost);
+
+    // 4. Generate file buffer based on requested format
     let buffer;
     let mimeType;
     let extension;
@@ -400,11 +411,21 @@ export async function exportReportData(userId, organizationId, {
 
     const filename = `${safeFilenamePrefix}_${timestamp}.${extension}`;
 
+    // 5. Concurrency-safe atomic debit deduction with employee tracking
+    const debitResult = await debitWallet(userId, organizationId, {
+      amount: creditCost,
+      referenceType: "report_export",
+      description: `Exported ${format.toUpperCase()} report: ${title}`,
+      client,
+    });
+
     return {
       buffer,
       filename,
       mimeType,
       recordCount: rows.length,
+      creditsDeducted: creditCost,
+      remainingCredits: debitResult.balanceAfter,
     };
   });
 }

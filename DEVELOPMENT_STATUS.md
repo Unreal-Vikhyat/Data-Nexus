@@ -16,34 +16,44 @@ Phase 1 and Phase 2 are implemented on Backend baseline. Phase 6 Reports & Expor
 | 3. Dataset management | Not started (Data Engineering) | Upload, parsing, schema detection, profiling, cleaning. |
 | 4. Data quality and analytics | In progress / Branch Analytics-AI | Generic analytics query engine, dynamic KPI API, chart data API, dataset summary API. |
 | 5. AI assistant | In progress / Branch Analytics-AI | LLM structured query plan generation, validation against real schema, safe SQL execution. |
-| 6. SaaS & Integrations | **Reports & Exports Implemented** | PDF (PDFKit), Excel (ExcelJS), and CSV report export engine with formula injection sanitization (CWE-1236) and bounded limits. Billing, credits, and Razorpay deferred per workflow scope. |
+| 6. SaaS & Integrations | **Reports, Exports & Credit Wallets Implemented** | PDF/Excel/CSV exports, organization credit wallet, pre-flight checks, double-entry ledger with employee tracking, and atomic balance constraints. Razorpay payment orders/webhooks next. |
 | 7. Final verification/deployment | Not started | Will include API/security/deployment docs and test results. |
 
-## Reports & Exports Module Details
+## SaaS & Integrations Details
 
 ### Files added
+- `backend/src/database/migrations/003_credit_wallets.sql` — Organization wallets and double-entry transaction ledger with forced RLS
+- `backend/src/config/credits.config.js` — Centralized credit rate card, pack tiers, and welcome bonus
+- `backend/src/services/wallet.service.js` — Credit wallet engine, pre-flight checks, atomic debit/credit operations, employee attribution
 - `backend/src/services/export.service.js` — PDF, Excel (.xlsx), and CSV generation engine with RFC 4180 compliance and formula injection sanitization
+- `backend/src/schemas/billing.schemas.js` — Zod request validation for wallet and transaction ledger
 - `backend/src/schemas/report.schemas.js` — Zod request validation for report export endpoints
+- `backend/src/controllers/billing.controller.js` — Billing and wallet HTTP handlers
 - `backend/src/controllers/report.controller.js` — Report HTTP handlers streaming file downloads with binary headers
+- `backend/src/routes/billing.routes.js` — Express routes for wallet balance, transactions, and manual credits
 - `backend/src/routes/report.routes.js` — Express routes for workspace-level and dataset-level report exports
-- `backend/tests/export.test.js` — 10 unit tests covering formula sanitization, CSV formatting, Excel generation, PDF binary output, and schema validation
-- `backend/docs/API.md` — Updated with complete Reports & Exports endpoint documentation
+- `backend/tests/wallet.test.js` — Unit tests for pre-flight checks, atomic debit/credit, and idempotency
+- `backend/tests/export.test.js` — 10 unit tests covering formula sanitization, CSV formatting, Excel generation, and PDF binary output
+- `backend/docs/API.md` — Updated with complete Reports, Exports, and Billing API documentation
 
 ### Files modified
 - `backend/package.json` — Added `pdfkit` and `exceljs` dependencies
-- `backend/src/app.js` — Registered `/api/v1` report export routes
+- `backend/src/app.js` — Registered `/api/v1` report export and billing routes
 - `DEVELOPMENT_STATUS.md` — This file
 
 ### API endpoints added
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/workspaces/:workspaceId/reports/export` | Generic workspace report export (accepts custom tabular data, KPIs, or datasetId) |
+| GET | `/api/v1/workspaces/:workspaceId/billing/wallet` | Get current workspace credit balance and metadata |
+| GET | `/api/v1/workspaces/:workspaceId/billing/transactions` | Get paginated transaction history with employee tracking |
+| POST | `/api/v1/workspaces/:workspaceId/billing/wallet/credit` | Manual credit adjustment (owner only) |
+| POST | `/api/v1/workspaces/:workspaceId/reports/export` | Generic workspace report export (PDF, Excel, CSV) |
 | POST | `/api/v1/workspaces/:workspaceId/datasets/:datasetId/reports/export` | Direct dataset report export (PDF, Excel, CSV) |
 
 ## Verification completed
 
 - `npm install`: completed (installed `pdfkit` and `exceljs`).
-- `npm test`: **5 suites passed**, 1 PostgreSQL integration suite skipped; **22 tests passed**, 2 database integration tests skipped.
+- `npm test`: **6 suites passed**, 1 PostgreSQL integration suite skipped; **30 tests passed**, 2 database integration tests skipped.
 - `npm run lint`: **passed** with 0 errors and 0 warnings.
 - All export tests pass: formula injection sanitization, CSV buffer creation, Excel multi-tab workbook, PDF binary magic header, and request schema bounds.
 
