@@ -1,3 +1,6 @@
+import Upload from "./pages/Upload";
+import Datasets from "./pages/Datasets";
+import Team from "./pages/Team";
 import Workspace from "./pages/Workspace";
 import {
   BrowserRouter,
@@ -37,6 +40,30 @@ function App() {
             </MainLayout>
           }
         />
+        <Route
+          path="/team"
+          element={
+            <MainLayout>
+              <Team />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/datasets"
+          element={
+          <MainLayout>
+            <Datasets />
+          </MainLayout>
+  }
+       />
+        <Route
+          path="/upload"
+          element={
+          <MainLayout>
+            <Upload />
+          </MainLayout>
+        }
+      />
 
         <Route path="*" element={<Navigate to="/login" replace />} />
 
