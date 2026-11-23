@@ -19,6 +19,10 @@ const envSchema = z.object({
   PASSWORD_RESET_EXPIRES_MINUTES: z.coerce.number().int().positive().default(30),
   SMTP_URL: z.string().optional(),
   EMAIL_FROM: z.string().default("Data Nexus <no-reply@example.com>"),
+  LLM_PROVIDER: z.enum(["openai", "gemini"]).default("openai"),
+  LLM_API_KEY: z.string().optional(),
+  LLM_BASE_URL: z.string().url().optional(),
+  LLM_MODEL: z.string().default("gpt-4o-mini"),
 });
 
 const result = envSchema.safeParse(process.env);

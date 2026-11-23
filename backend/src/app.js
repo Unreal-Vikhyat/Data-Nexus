@@ -9,6 +9,8 @@ import { logger } from "./config/logger.js";
 import authRoutes from "./routes/auth.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import workspaceRoutes from "./routes/workspace.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
+import assistantRoutes from "./routes/assistant.routes.js";
 import { errorHandler, notFound } from "./middleware/error-handler.js";
 
 export function createApp() {
@@ -55,6 +57,8 @@ export function createApp() {
   app.use("/api/v1", healthRoutes);
   app.use("/api/v1/auth", authRoutes);
   app.use("/api/v1", workspaceRoutes);
+  app.use("/api/v1", analyticsRoutes);
+  app.use("/api/v1", assistantRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;
