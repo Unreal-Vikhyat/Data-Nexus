@@ -25,6 +25,10 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: z.string().min(1).default("rzp_test_TzHjzbaQmdG2z6"),
   RAZORPAY_KEY_SECRET: z.string().min(1).default("gGNlAjILyjVT93FEXfH5GKBl"),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  LLM_PROVIDER: z.enum(["openai", "gemini"]).default("openai"),
+  LLM_API_KEY: z.string().optional(),
+  LLM_BASE_URL: z.string().url().optional(),
+  LLM_MODEL: z.string().default("gpt-4o-mini"),
 });
 
 const result = envSchema.safeParse(process.env);

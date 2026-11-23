@@ -12,6 +12,8 @@ import workspaceRoutes from "./routes/workspace.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import billingRoutes from "./routes/billing.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
+import assistantRoutes from "./routes/assistant.routes.js";
 import { errorHandler, notFound } from "./middleware/error-handler.js";
 
 export function createApp() {
@@ -61,6 +63,8 @@ export function createApp() {
   app.use("/api/v1", reportRoutes);
   app.use("/api/v1", billingRoutes);
   app.use("/api/v1", activityRoutes);
+  app.use("/api/v1", analyticsRoutes);
+  app.use("/api/v1", assistantRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;
