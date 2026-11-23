@@ -279,6 +279,210 @@ Response `200`:
 { "success": true, "message": "Member removed", "data": { "removed": true } }
 ```
 
+## Reports and exports
+
+Base path: `/api/v1`. Supports exporting authorized analytics results, dataset summaries, and custom query tables to PDF, Excel (.xlsx), and CSV.
+
+### Supported formats
+- `pdf`: Branded executive report with Data Nexus banner, KPI summary cards, and paginated data tables (`application/pdf`).
+- `xlsx`: Structured Excel workbook with styled headers, auto-width columns, and separate Overview/Data sheets (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`).
+- `csv`: High-performance CSV stream with RFC 4180 escaping and formula injection sanitization (`text/csv; charset=utf-8`).
+
+### Security: Spreadsheet formula injection protection
+Cells starting with formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) are automatically neutralized with a leading single quote (`'`) to prevent formula execution in spreadsheet software (CWE-1236).
+
+### `POST /workspaces/:workspaceId/reports/export`
+
+Permission: active member (viewer or above). Exports custom tabular data, KPI metrics, or query state.
+
+Request:
+
+```json
+{
+  "format": "pdf",
+  "title": "Q4 Executive Performance & Revenue Report",
+  "subtitle": "Comprehensive analytics summary covering regional sales and category performance.",
+  "summaryMetrics": [
+    { "label": "Total Revenue", "value": "₹ 2,45,000" },
+    { "label": "Total Orders", "value": "1,420" }
+  ],
+  "customColumns": ["Region", "Category", "Orders", "Revenue"],
+  "customRows": [
+    ["North", "Electronics", 480, "₹ 1,12,000"],
+    ["South", "Furniture", 340, "₹ 68,500"]
+  ],
+  "limit": 500
+}
+```
+
+Response `200`: Binary file download stream with headers:
+- `Content-Type: application/pdf` (or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` or `text/csv; charset=utf-8`)
+- `Content-Disposition: attachment; filename="q4_executive_performance_2026-11-12.pdf"`
+- `Content-Length: <byte_count>`
+
+### `POST /workspaces/:workspaceId/datasets/:datasetId/reports/export`
+
+Permission: active member (viewer or above). Exports data directly from an existing workspace dataset.
+
+Request:
+
+```json
+{
+  "format": "xlsx",
+  "title": "Dataset Summary Export",
+  "summaryMetrics": [
+    { "label": "Total Records", "value": 1250 }
+  ],
+  "limit": 1000
+}
+```
+
+Response `200`: Binary file download stream.
+
+## Billing and credit wallet
+
+Base path: `/api/v1`. Manages organization credit balances, transaction ledgers, pre-flight checks, and employee usage tracking.
+
+### Credit consumption policy
+- PDF Report Export: 5 credits
+- Excel (.xlsx) Report Export: 2 credits
+- CSV Report Export: 1 credit
+- AI Assistant Query: 3 credits
+- Complex Analytics Query: 1 credit
+- Welcome starter bonus: 50 free credits per workspace
+
+### `GET /workspaces/:workspaceId/billing/wallet`
+
+Permission: active member (viewer or above). Returns current credit balance, currency, and update timestamp.
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Workspace credit wallet",
+  "data": {
+    "id": "b1c2d3e4-4444-4444-4444-444444444444",
+    "organizationId": "dafd587a-75a0-4ccd-b529-5aa03761321c",
+    "balance": 50,
+    "currency": "INR",
+    "updatedAt": "2026-11-12T10:00:00.000Z"
+  }
+}
+```
+
+### `GET /workspaces/:workspaceId/billing/transactions`
+
+Permission: active member (viewer or above). Returns paginated ledger entries with employee attribution (`userName`, `userEmail`), balance snapshot, and reference reasons.
+
+Query params: `limit` (default 50), `offset` (default 0), `type` (`credit`, `debit`, `refund`, `adjustment`).
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Wallet transaction ledger",
+  "data": {
+    "items": [
+      {
+        "id": "a1b2c3d4-1111-1111-1111-111111111111",
+        "type": "debit",
+        "amount": 5,
+        "balanceAfter": 45,
+        "description": "Exported PDF report: Q4 Performance",
+        "referenceType": "report_export",
+        "referenceId": null,
+        "createdAt": "2026-11-12T15:30:00.000Z",
+        "userId": "0ae5b005-b3e7-4b4c-83af-968fc230ed51",
+        "userName": "Mahi Sharma",
+        "userEmail": "user@example.com"
+      }
+    ],
+    "total": 1,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": false
+  }
+}
+```
+
+### `POST /workspaces/:workspaceId/billing/wallet/credit`
+
+Permission: workspace owner only. Manually adds credits to the organization wallet (administrative adjustments / enterprise offline top-up).
+
+Request:
+
+```json
+{
+  "amount": 100,
+  "description": "Support compensation"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Credits added",
+  "data": {
+    "success": true,
+    "transactionId": "tx-uuid",
+    "amount": 100,
+    "balanceAfter": 150
+  }
+}
+```
+
+## Activity & Audit Logs
+
+### `GET /workspaces/:workspaceId/activity`
+
+Permission: any workspace member (`viewer`, `editor`, `admin`, `owner`).
+
+Query params:
+- `limit` (optional integer, 1–200, default `50`)
+- `offset` (optional integer, default `0`)
+- `action` (optional string, e.g. `report.export`, `wallet.debit`, `wallet.credit`)
+- `entityType` (optional string, e.g. `report`, `wallet`)
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Workspace activity logs",
+  "data": {
+    "items": [
+      {
+        "id": "e4f5a6b7-8901-2345-6789-0123456789ab",
+        "organizationId": "3493e828-5586-45ef-89a1-02e07973d4ee",
+        "userId": "0ae5b005-b3e7-4b4c-83af-968fc230ed51",
+        "userName": "Mahi Sharma",
+        "userEmail": "user@example.com",
+        "action": "report.export",
+        "entityType": "report",
+        "entityId": "custom",
+        "details": {
+          "format": "pdf",
+          "title": "Data Nexus Executive Report",
+          "recordCount": 150,
+          "creditsDeducted": 5,
+          "remainingCredits": 45
+        },
+        "ipAddress": "127.0.0.1",
+        "createdAt": "2026-11-12T16:20:00.000Z"
+      }
+    ],
+    "total": 1,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": false
+  }
+}
+```
+
 ## Common failures
 
 - `400 VALIDATION_ERROR` — invalid input; `errors` maps fields to validation messages.
