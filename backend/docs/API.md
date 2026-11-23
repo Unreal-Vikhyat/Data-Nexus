@@ -435,6 +435,109 @@ Response `200`:
 }
 ```
 
+### `GET /workspaces/:workspaceId/billing/packs`
+
+Permission: active member (viewer or above). Returns the list of purchasable credit tiers.
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "pack_starter",
+      "name": "Starter Pack",
+      "credits": 100,
+      "priceInPaise": 49900,
+      "currency": "INR",
+      "popular": false
+    },
+    {
+      "id": "pack_growth",
+      "name": "Growth Pack",
+      "credits": 500,
+      "priceInPaise": 199900,
+      "currency": "INR",
+      "popular": true
+    },
+    {
+      "id": "pack_scale",
+      "name": "Scale Pack",
+      "credits": 2000,
+      "priceInPaise": 699900,
+      "currency": "INR",
+      "popular": false
+    }
+  ]
+}
+```
+
+### `POST /workspaces/:workspaceId/billing/orders`
+
+Permission: active member. Creates an authentic server-side Razorpay order for the selected credit tier.
+
+Request:
+
+```json
+{
+  "packId": "pack_growth"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Razorpay order created",
+  "data": {
+    "orderId": "order_EKwxwAgItmmXdp",
+    "amount": 199900,
+    "currency": "INR",
+    "keyId": "rzp_test_YourKeyHere",
+    "pack": {
+      "id": "pack_growth",
+      "name": "Growth Pack",
+      "credits": 500,
+      "priceInPaise": 199900,
+      "currency": "INR",
+      "popular": true
+    }
+  }
+}
+```
+
+### `POST /workspaces/:workspaceId/billing/verify`
+
+Permission: active member. Cryptographically verifies the Razorpay payment signature using HMAC-SHA256 (`timingSafeEqual`) and atomically credits the organization wallet. Idempotent via payment ID.
+
+Request:
+
+```json
+{
+  "orderId": "order_EKwxwAgItmmXdp",
+  "paymentId": "pay_G32X3f832vdfb",
+  "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "packId": "pack_growth"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "success": true,
+  "message": "Payment successfully verified and credits added to wallet",
+  "data": {
+    "success": true,
+    "transactionId": "tx-uuid",
+    "amount": 500,
+    "balanceAfter": 550
+  }
+}
+```
+
 ## Activity & Audit Logs
 
 ### `GET /workspaces/:workspaceId/activity`

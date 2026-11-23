@@ -11,7 +11,6 @@ export const CREDIT_COSTS = Object.freeze({
   REPORT_CSV: 1,
   ANALYTICS_QUERY: 1,
 });
-
 export const CREDIT_PACKS = Object.freeze([
   {
     id: "pack_starter",

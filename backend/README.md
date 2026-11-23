@@ -1,6 +1,6 @@
 # Data Nexus Backend
 
-Phase 1 and Phase 2 implementation for the Data Nexus API. This is a standalone Node.js/Express service in the repository's `Backend` branch. The React application on `Frontend` is not changed.
+Implementation for the Data Nexus API on branch `SaaS-Integration`. Extends the foundational backend with organization credit wallets, double-entry transaction monitoring, server-side Razorpay order creation and HMAC-SHA256 signature verification, multi-format report exports (PDF, Excel, CSV), responsive Brevo/SMTP transactional email invitations, and enterprise activity/audit logging.
 
 ## Stack and scope
 
@@ -8,9 +8,12 @@ Phase 1 and Phase 2 implementation for the Data Nexus API. This is a standalone 
 - PostgreSQL through `pg`; SQL migrations are applied by `npm run db:migrate`
 - Zod request validation, bcrypt password hashing, JWT sessions in HTTP-only cookies
 - Helmet, strict credentialed CORS, rate limiting, Pino request logging
-- Jest and Supertest, including a PostgreSQL integration suite
+- Razorpay SDK with timing-safe HMAC-SHA256 signature verification
+- PDFKit (vector PDF generation) and ExcelJS (multi-tab spreadsheet generation)
+- Brevo REST API v3 and Nodemailer SMTP for transactional email
+- Jest and Supertest, including unit and PostgreSQL integration suites
 
-Implemented in this phase: API foundation and health endpoints; users, organizations/workspaces, memberships, invitations, password resets, revocable sessions, role authorization, and forced RLS on organization-scoped tables. Dataset processing, analytics, assistant, reporting, exports, credits and Razorpay are intentionally left for later approved phases.
+Implemented: API foundation, health endpoints, auth & session lifecycle, workspaces, memberships, role authorization, forced RLS on tenant tables, credit wallets & ledger, Razorpay credit packs, report exports, invitation email delivery, and activity audit logging. Dataset upload/processing is owned by Data Engineering; analytics and AI assistant are owned by Analytics-AI.
 
 ## Run locally
 
@@ -113,8 +116,8 @@ Member list entries contain `id`, `userId`, `name`, `email`, `role`, `status`, a
 - `GET /api/v1/health/ready` — database connection and verification that the connected runtime role is not superuser/`BYPASSRLS`.
 
 ### Remaining application APIs
-
-Dataset upload/schema/mapping/quality, cleaning, analytics, AI assistant, reports/exports, billing/credits/Razorpay, and activity APIs are not registered yet. They are explicitly deferred to the later approved phases; no placeholder routes are returned as successful responses.
+ 
+Reports/exports, credit wallets, transaction ledger, Razorpay payments, transactional invitations, and activity logging APIs are fully registered and operational on this branch (`SaaS-Integration`). Dataset upload/schema profiling is owned by Data Engineering; analytics and AI query generation are owned by Analytics-AI.
 
 ## Tests
 
